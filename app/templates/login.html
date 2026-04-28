@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}📚 Kitap Mağazası — Giriş{% endblock %}
+
+{% block body %}
+<div class="login-wrap">
+  <div class="login-card card shadow-lg overflow-hidden border-0">
+    <div class="card-header py-5 text-center border-0" style="background: rgba(29, 29, 31, 0.95);">
+      <div class="brand fs-1 text-white">📚 Kitap Mağazası</div>
+      <small class="text-white-50 letter-spacing-1">PREMIUM MANAGEMENT SYSTEM</small>
+    </div>
+    
+    <div class="card-body p-4 p-md-5 bg-white">
+      <div id="login-err" class="alert alert-danger d-none border-0 rounded-3 small"></div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold text-muted">KULLANICI ADI</label>
+        <input id="username" type="text" class="form-control form-control-lg rounded-pill px-4 border-light bg-light"
+               placeholder="Örn: admin" autocomplete="username">
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label small fw-bold text-muted">PAROLA</label>
+        <input id="password" type="password" class="form-control form-control-lg rounded-pill px-4 border-light bg-light"
+               placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button onclick="doLogin()" class="btn btn-amber w-100 btn-lg fw-bold rounded-pill shadow-sm transition-all mb-3">
+        Giriş Yap
+      </button>
+
+      <div class="text-center">
+        <button class="btn btn-link btn-sm text-decoration-none text-muted" data-bs-toggle="modal" data-bs-target="#registerModal">
+          Hesabınız yok mu? <span class="text-primary fw-bold">Hemen Kayıt Olun</span>
+        </button>
+      </div>
+
+      <div class="mt-4 pt-3 border-top text-center text-muted small opacity-75">
+        Demo: <code>admin / Admin123!</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content card shadow-2xl border-0">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold m-0">Yeni Üyelik Oluştur</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="reg-err" class="alert alert-danger d-none border-0 rounded-3 small"></div>
+        
+        <div class="mb-3">
+          <label class="form-label small fw-bold text-muted">KULLANICI ADI</label>
+          <input id="reg-username" type="text" class="form-control rounded-pill px-3 border-light bg-light">
+        </div>
+        <div class="mb-4">
+          <label class="form-label small fw-bold text-muted">PAROLA</label>
+          <input id="reg-password" type="password" class="form-control rounded-pill px-3 border-light bg-light">
+        </div>
+        
+        <button onclick="doRegister()" class="btn btn-primary w-100 btn-lg fw-bold rounded-pill shadow-sm">
+          Kaydı Tamamla
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ── Login Logic ─────────────────────────────────────── */
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const errEl    = document.getElementById('login-err');
+  errEl.classList.add('d-none');
+
+  if (!username || !password) {
+    errEl.textContent = 'Lütfen tüm alanları doldurun.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  const { ok, data } = await API.call('POST', '/api/auth/login', { username, password });
+
+  if (!ok) {
+    errEl.textContent = data.error || 'Giriş başarısız';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  // Session storage
+  localStorage.setItem('bk_token', data.token);
+  localStorage.setItem('bk_role',  data.role);
+  localStorage.setItem('bk_user',  data.username);
+  
+  toast('Giriş başarılı, yönlendiriliyorsunuz...');
+  setTimeout(() => window.location = '/dashboard', 800);
+}
+
+/* ── Register Logic ──────────────────────────────────── */
+async function doRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const errEl    = document.getElementById('reg-err');
+  errEl.classList.add('d-none');
+
+  if (!username || !password) {
+    errEl.textContent = 'Kullanıcı adı ve parola zorunlu.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  const { ok, data } = await API.call('POST', '/api/auth/register', { username, password });
+
+  if (!ok) {
+    errEl.textContent = data.error || 'Kayıt sırasında bir hata oluştu.';
+    errEl.classList.remove('d-none');
+    return;
+  }
+
+  toast('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
+  
+  // Modal kapatma ve temizleme
+  const regModal = bootstrap.Modal.getInstance(document.getElementById('registerModal'));
+  regModal.hide();
+  document.getElementById('reg-username').value = '';
+  document.getElementById('reg-password').value = '';
+}
+
+/* Keyboard Events */
+document.addEventListener('keydown', e => { 
+  if (e.key === 'Enter') {
+    const isModalOpen = !!document.querySelector('.modal.show');
+    if (isModalOpen) doRegister();
+    else doLogin();
+  } 
+});
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+# Flask Web Framework
+Flask==3.0.0
+
+# Database ORM
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+
+# JWT Authentication
+Flask-JWT-Extended==4.5.3
+PyJWT>=2.8.0
+
+# Security (password hashing)
+Werkzeug==3.0.1
+
+# WSGI Server (production)
+gunicorn==21.2.0
+
+# Environment variable support (optional)
+python-dotenv==1.0.0
